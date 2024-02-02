@@ -18,6 +18,8 @@ import os
 import csv
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
+tf.compat.v1.disable_eager_execution()
+
 class KnowledgeGraph:
     def __init__(self, data_dir, train_rate=0.8):
         self.data_dir = data_dir
@@ -130,7 +132,7 @@ class KnowledgeGraph:
 class TransE:
     def __init__(self, kg: KnowledgeGraph, embed_dim=20, margin_value=2.0, learning_rate=0.1):
         self.kg = kg
-        self.sess = tf.Session()
+        self.sess = tf.compat.v1.Session()
         
         self.embed_dim = embed_dim
         self.margin_value = margin_value
@@ -140,16 +142,16 @@ class TransE:
         
         
     def build_model(self):
-        with tf.variable_scope('TransE'):
-            self.triple_pos = tf.placeholder(dtype=tf.int32, shape=[None, 3])
-            self.triple_neg = tf.placeholder(dtype=tf.int32, shape=[None, 3])
-            self.margin = tf.placeholder(dtype=tf.float32, shape=[None])
+        with tf.compat.v1.variable_scope('TransE'):
+            self.triple_pos = tf.compat.v1.placeholder(dtype=tf.int32, shape=[None, 3])
+            self.triple_neg = tf.compat.v1.placeholder(dtype=tf.int32, shape=[None, 3])
+            self.margin = tf.compat.v1.placeholder(dtype=tf.float32, shape=[None])
             
             bound = 6 / math.sqrt(self.embed_dim)
-            self.embed_initializer = tf.random_uniform_initializer(minval=-bound, maxval=bound)
+            self.embed_initializer = tf.compat.v1.random_uniform_initializer(minval=-bound, maxval=bound)
             
-            self.entity_embedding_raw = tf.get_variable(name='entity_embedding_raw', shape=[self.kg.n_entity, self.embed_dim], initializer=self.embed_initializer)
-            self.relation_embedding_raw = tf.get_variable(name='relation_embedding_raw', shape=[self.kg.n_relation, self.embed_dim], initializer=self.embed_initializer)
+            self.entity_embedding_raw = tf.compat.v1.get_variable(name='entity_embedding_raw', shape=[self.kg.n_entity, self.embed_dim], initializer=self.embed_initializer)
+            self.relation_embedding_raw = tf.compat.v1.get_variable(name='relation_embedding_raw', shape=[self.kg.n_relation, self.embed_dim], initializer=self.embed_initializer)
             
             self.entity_embedding = tf.nn.l2_normalize(self.entity_embedding_raw, dim=1)
             self.relation_embedding = tf.nn.l2_normalize(self.relation_embedding_raw, dim=1)
@@ -169,7 +171,7 @@ class TransE:
             self.score_neg = tf.reduce_sum(tf.square(self.distance_neg), axis=1)
             
             self.loss = tf.reduce_sum(tf.nn.relu(self.margin + self.score_pos - self.score_neg))
-            self.opt = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
+            self.opt = tf.compat.v1.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
             
     
     def train(self, batch_size=1000, n_epoch=30):
@@ -189,7 +191,7 @@ class TransE:
         for _ in range(n_epoch):
             raw_batch_queue.put(None)
         
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
         
         count = 0
         epoch_loss = 0

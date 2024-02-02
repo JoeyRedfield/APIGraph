@@ -15,6 +15,7 @@ from sklearn.cluster import KMeans
 
 cluster_k = 2000
 
+
 def clusterEmbedding():
     with open('res/method_entity_embedding_TransE.pkl', 'rb') as f:
         entity_embedding = pickle.load(f)
